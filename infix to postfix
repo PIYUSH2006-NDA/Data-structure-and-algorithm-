@@ -1,0 +1,79 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+// Define stack structure
+struct stack {
+    int top;
+    char arr[100];  // fixed size for simplicity
+};
+
+// Stack functions
+void push(struct stack* s, char val) {
+    s->arr[++s->top] = val;
+}
+
+char pop(struct stack* s) {
+    return s->arr[s->top--];
+}
+
+char stacktop(struct stack* s) {
+    return s->arr[s->top];
+}
+
+int isoperator(char ch) {
+    return (ch == '+' || ch == '-' || ch == '*' || ch == '/');
+}
+
+int prec(char ch) {
+    if (ch == '*' || ch == '/')
+        return 2;
+    else if (ch == '+' || ch == '-')
+        return 1;
+    else
+        return 0;
+}
+
+char* intopo(char* infix) {
+    struct stack* sp = (struct stack*)malloc(sizeof(struct stack));
+    sp->top = -1;
+
+    char* postfix = (char*)malloc((strlen(infix) + 1) * sizeof(char)); 
+    int i = 0, j = 0;
+
+    while (infix[i] != '\0') { 
+        if (!isoperator(infix[i]) && infix[i] != '(' && infix[i] != ')') {
+            postfix[j++] = infix[i++];
+        } 
+        else if (infix[i] == '(') {
+            push(sp, infix[i++]);
+        }
+        else if (infix[i] == ')') {
+            while (sp->top != -1 && stacktop(sp) != '(') {
+                postfix[j++] = pop(sp);
+            }
+            pop(sp); // pop '('
+            i++;
+        }
+        else {  // operator
+            while (sp->top != -1 && prec(infix[i]) <= prec(stacktop(sp))) {
+                postfix[j++] = pop(sp);
+            }
+            push(sp, infix[i++]);
+        }
+    }
+
+    while (sp->top != -1) {
+        postfix[j++] = pop(sp);
+    }
+
+    postfix[j] = '\0';
+    return postfix;
+}
+
+int main() {
+    char infix[] = "m-n*(p+q)";
+    char* postfix = intopo(infix);
+
+    printf("The postfix value of the infix is: %s\n", postfix);
+    return 0;
+}
